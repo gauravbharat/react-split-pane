@@ -4,6 +4,7 @@ import { getWords } from "../shared/util/lorem-generator";
 import { useContext } from "react";
 import { AppContext } from "../store/app.context";
 import Dragger from "../shared/components/Dragger";
+import { getNewWidth } from "../shared/util/drag-computations";
 
 export default function Pane({
   initTab,
@@ -12,7 +13,10 @@ export default function Pane({
   onRemovePane,
   isLastPane,
   id,
+  paneWidth,
   showSplitter,
+  onResizePane,
+  totalPanes,
 }) {
   const ctx = useContext(AppContext);
   const divRef = useRef();
@@ -21,7 +25,6 @@ export default function Pane({
     tabs: initTab,
     selectedTab: initTab[0],
     selectedTabIdx: 0,
-    paneWidth: "100%",
   });
 
   // console.log("Pane : RENDERED : paneState", paneState);
@@ -79,24 +82,14 @@ export default function Pane({
   }
 
   function handleDragComplete(changePx) {
-    const offsetWidth = divRef.current.offsetWidth;
-    const offsetParentWidth = divRef.current.offsetParent.offsetWidth;
-    const percentage =
-      Math.round((100 * (offsetWidth + changePx)) / offsetParentWidth) + 50;
+    const { percentage, siblingPercentage } = getNewWidth(
+      changePx,
+      divRef.current.offsetWidth,
+      divRef.current.offsetParent.offsetWidth,
+      totalPanes
+    );
 
-    // console.log("Pane: handleDragComplete", {
-    //   changePx,
-    //   offsetWidth,
-    //   offsetParentWidth,
-    //   percentage,
-    // });
-
-    divRef.current.style.width = `${percentage}%`;
-
-    setPaneState((prevState) => ({
-      ...prevState,
-      paneWidth: divRef.current.style.width,
-    }));
+    onResizePane(id, `${percentage}%`, `${siblingPercentage}%`);
   }
 
   return (
@@ -104,7 +97,7 @@ export default function Pane({
       style={{
         display: "block",
         overflowX: "scroll",
-        width: paneState.paneWidth,
+        width: paneWidth,
         height: "100%",
         border: "1px solid blue",
         minWidth: "81px",
