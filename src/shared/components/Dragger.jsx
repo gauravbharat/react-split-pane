@@ -8,6 +8,22 @@ const getChangeInPx = (newPos, oldPos) => {
   return changePx;
 };
 
+const log = (title, horizontal, e) => {
+  console.log(title, {
+    ...(horizontal
+      ? {
+          clientY: e.clientY,
+          pageY: e.pageY,
+          screenY: e.screenY,
+        }
+      : {
+          clientX: e.clientX,
+          pageX: e.pageX,
+          screenX: e.screenX,
+        }),
+  });
+};
+
 export default function Dragger({ horizontal = false, onDragComplete }) {
   const [resizeState, setResizeState] = useState({
     resizing: false,
@@ -17,11 +33,8 @@ export default function Dragger({ horizontal = false, onDragComplete }) {
   });
 
   function handleDragStart(e) {
-    // console.log("handleDragStart", {
-    //   clientX: e.clientX,
-    //   pageX: e.pageX,
-    //   screenX: e.screenX,
-    // });
+    console.groupCollapsed("Dragger");
+    log("handleDragStart", horizontal, e);
 
     setResizeState({
       resizing: true,
@@ -32,36 +45,15 @@ export default function Dragger({ horizontal = false, onDragComplete }) {
   }
 
   function handleDragEnd(e) {
-    // console.log("handleDragEnd", {
-    //   clientX: e.clientX,
-    //   clientY: e.clientY,
-    //   dragPosClientX: resizeState.dragPosClientX,
-    //   dragPosClientY: resizeState.dragPosClientY,
-    // });
-    // setResizeState({
-    // const dragDirection = e.clientX - resizeState.dragPosClientX;
-    // const changePx =
-    //   dragDirection < 0 ? dragDirection - dragDirection * 2 : -dragDirection;
+    log("handleDragEnd", horizontal, e);
 
     const changePixelX = getChangeInPx(e.clientX, resizeState.dragPosClientX);
     const changePixelY = getChangeInPx(e.clientY, resizeState.dragPosClientY);
 
     console.log("handleDragEnd", {
-      changePixelX,
-      changePixelY,
+      changedPixel: horizontal ? changePixelY : changePixelX,
     });
-
-    // console.log("handleDragEnd", {
-    //   dragDirection,
-    //   clientX: e.clientX,
-    //   dragPosClientX: resizeState.dragPosClientX,
-    //   changePx,
-    // });
-
-    // console.log(
-    //   "handleDragEnd : divRef.current.offsetWidth",
-    //   divRef.current.offsetWidth
-    // );
+    console.groupEnd();
 
     onDragComplete(horizontal ? changePixelY : changePixelX);
 
@@ -73,9 +65,13 @@ export default function Dragger({ horizontal = false, onDragComplete }) {
     });
   }
 
-  function handleDrag(e) {
-    // console.log("handleDrag", e);
-  }
+  // function handleDrag(e) {
+  //   // console.log("handleDrag", {
+  //   //   clientX: e.clientX,
+  //   //   pageX: e.pageX,
+  //   //   screenX: e.screenX,
+  //   // });
+  // }
 
   return (
     <div
@@ -92,7 +88,7 @@ export default function Dragger({ horizontal = false, onDragComplete }) {
       draggable
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
-      onDrag={handleDrag}
+      // onDrag={handleDrag}
     ></div>
   );
 }

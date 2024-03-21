@@ -10,19 +10,20 @@ const firstTab = {
   content: getWords(20),
 };
 
-export default function PaneContainer({ id, showSplitter }) {
+export default function PaneContainer({ id, showSplitter, containerHeight }) {
   const ctx = useContext(AppContext);
   const divRef = useRef();
+
+  // console.log("PaneContainer : RENDERED : props", {
+  //   id,
+  //   containerHeight,
+  // });
 
   const [panes, setPanes] = useState([
     {
       id: new Date().getTime().toString(),
     },
   ]);
-
-  const [containerHeight, setcontainerHeight] = useState("100%");
-
-  // console.log("ctx.selectedTabGlobal", ctx.selectedTabGlobal);
 
   function handleAddPane() {
     setPanes((prevState) => [
@@ -55,22 +56,29 @@ export default function PaneContainer({ id, showSplitter }) {
   function handleDragComplete(changePx) {
     const offsetHeight = divRef.current.offsetHeight;
     const offsetParentHeight = divRef.current.offsetParent.offsetHeight;
-    const percentage =
-      Math.round((100 * (offsetHeight + changePx)) / offsetParentHeight) + 50;
+    const newHeight = offsetHeight + changePx;
+    const divisibleHeight = offsetParentHeight / ctx.totalPaneContainers;
+    const percentage = Math.round((100 * newHeight) / divisibleHeight);
+
+    let siblingPercentage = 0;
+
+    if (percentage > 100) {
+      siblingPercentage = 100 - (percentage - 100);
+    } else {
+      siblingPercentage = 100 + (100 - percentage);
+    }
 
     // console.log("PaneContainer: handleDragComplete", {
     //   changePx,
     //   offsetHeight,
     //   offsetParentHeight,
+    //   newHeight,
     //   percentage,
+    //   siblingPercentage,
+    //   totalPaneContainers: ctx.totalPaneContainers,
     // });
 
-    divRef.current.style.height = `${percentage}%`;
-
-    setcontainerHeight((prevState) => ({
-      ...prevState,
-      resizedHeight: divRef.current.style.height,
-    }));
+    ctx.setContainerHeight(id, `${percentage}%`, `${siblingPercentage}%`);
   }
 
   const lastIndex = panes.length - 1;
@@ -80,11 +88,10 @@ export default function PaneContainer({ id, showSplitter }) {
       style={{
         display: "flex",
         position: "relative",
-        // justifyContent:
-        // flexWrap: "wrap",
         height: containerHeight,
         width: "100%",
         overflowX: "scroll",
+        overflowY: "hidden",
       }}
       ref={divRef}
     >

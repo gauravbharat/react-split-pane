@@ -24,7 +24,7 @@ export default function Pane({
     paneWidth: "100%",
   });
 
-  console.log("Pane : RENDERED : paneState", paneState);
+  // console.log("Pane : RENDERED : paneState", paneState);
 
   function handleAddTab() {
     const newTab = {
