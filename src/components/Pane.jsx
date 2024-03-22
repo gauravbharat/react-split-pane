@@ -5,6 +5,7 @@ import { useContext } from "react";
 import { AppContext } from "../store/app.context";
 import Dragger from "../shared/components/Dragger";
 import { getNewWidth } from "../shared/util/drag-computations";
+import Splitter from "../shared/components/Splitter";
 
 export default function Pane({
   initTab,
@@ -82,14 +83,49 @@ export default function Pane({
   }
 
   function handleDragComplete(changePx) {
+    const paneContainer = document.getElementById(
+      `pane-container-${paneContainerId}`
+    );
+
     const { percentage, siblingPercentage } = getNewWidth(
       changePx,
       divRef.current.offsetWidth,
-      divRef.current.offsetParent.offsetWidth,
+      paneContainer.offsetWidth,
       totalPanes
     );
 
-    onResizePane(id, `${percentage}%`, `${siblingPercentage}%`);
+    if (percentage <= 10 || siblingPercentage <= 10) {
+      return;
+    }
+
+    onResizePane(id, percentage, siblingPercentage);
+  }
+
+  function handleSplit(increment) {
+    let currentSiblingWidthPercent = 0;
+
+    if (paneWidth > 100) {
+      currentSiblingWidthPercent = 100 - (paneWidth - 100);
+    } else {
+      currentSiblingWidthPercent = 100 + (100 - paneWidth);
+    }
+
+    let percentage = paneWidth;
+    let siblingPercentage = currentSiblingWidthPercent;
+
+    if (increment) {
+      percentage++;
+      siblingPercentage--;
+    } else {
+      percentage--;
+      siblingPercentage++;
+    }
+
+    if (percentage <= 10 || siblingPercentage <= 10) {
+      return;
+    }
+
+    onResizePane(id, percentage, siblingPercentage);
   }
 
   return (
@@ -97,7 +133,7 @@ export default function Pane({
       style={{
         display: "block",
         overflowX: "scroll",
-        width: paneWidth,
+        width: `${paneWidth}%`,
         height: "100%",
         border: "1px solid blue",
         minWidth: "81px",
@@ -106,7 +142,12 @@ export default function Pane({
       }}
       ref={divRef}
     >
-      {showSplitter && <Dragger onDragComplete={handleDragComplete} />}
+      {showSplitter && ctx.useSplitter === "DRAGGER" && (
+        <Dragger onDragComplete={handleDragComplete} />
+      )}
+      {showSplitter > 0 && ctx.useSplitter === "MOUSEMOVE" && (
+        <Splitter key={`splitter-${id}`} parentId={id} onSplit={handleSplit} />
+      )}
 
       <ul
         style={{

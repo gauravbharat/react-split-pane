@@ -1,12 +1,5 @@
 import { useState } from "react";
-
-const getChangeInPx = (newPos, oldPos) => {
-  const dragDirection = newPos - oldPos;
-  const changePx =
-    dragDirection < 0 ? dragDirection - dragDirection * 2 : -dragDirection;
-
-  return changePx;
-};
+import { getChangedPixels } from "../util/drag-computations";
 
 const log = (title, horizontal, e) => {
   console.log(title, {
@@ -45,17 +38,22 @@ export default function Dragger({ horizontal = false, onDragComplete }) {
   }
 
   function handleDragEnd(e) {
-    log("handleDragEnd", horizontal, e);
+    // log("handleDragEnd", horizontal, e);
 
-    const changePixelX = getChangeInPx(e.clientX, resizeState.dragPosClientX);
-    const changePixelY = getChangeInPx(e.clientY, resizeState.dragPosClientY);
+    const axisXChange = e.clientX;
+    const axisYChange = e.clientY;
 
-    console.log("handleDragEnd", {
-      changedPixel: horizontal ? changePixelY : changePixelX,
-    });
+    console.log("handleDragEnd : axisXChange", axisXChange);
+    console.log("handleDragEnd : axisYChange", axisYChange);
+
+    const changedPixel = horizontal
+      ? getChangedPixels(axisYChange, resizeState.dragPosClientY)
+      : getChangedPixels(axisXChange, resizeState.dragPosClientX);
+
+    console.log("handleDragEnd : changedPixel", changedPixel);
     console.groupEnd();
 
-    onDragComplete(horizontal ? changePixelY : changePixelX);
+    onDragComplete(changedPixel);
 
     setResizeState({
       resizing: false,
@@ -84,6 +82,7 @@ export default function Dragger({ horizontal = false, onDragComplete }) {
         height: horizontal ? "1px" : "100%",
         width: horizontal ? "100%" : "1px",
         backgroundColor: "blue",
+        opacity: resizeState.resizing ? "60%" : "100%",
       }}
       draggable
       onDragStart={handleDragStart}

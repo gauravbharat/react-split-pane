@@ -1,3 +1,11 @@
+export const getChangedPixels = (newPos, oldPos) => {
+  const moveDirection = newPos - oldPos;
+  const changePx =
+    moveDirection < 0 ? moveDirection - moveDirection * 2 : -moveDirection;
+
+  return changePx;
+};
+
 export function getNewHeight(
   changedPixels,
   offsetHeight,
@@ -39,8 +47,8 @@ export function getNewWidth(
   totalPanes
 ) {
   const newWidth = offsetWidth + changedPixels;
-  const divisibleHeight = offsetParentWidth / totalPanes;
-  const percentage = Math.round((100 * newWidth) / divisibleHeight);
+  const divisibleWidth = offsetParentWidth / totalPanes;
+  const percentage = Math.round((100 * newWidth) / divisibleWidth);
 
   let siblingPercentage = 0;
 

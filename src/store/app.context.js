@@ -4,10 +4,14 @@ const initialState = {
   paneContainers: [
     {
       id: new Date().getTime().toString(),
-      containerHeight: "100%",
+      containerHeight: 100, //in percent
     },
   ],
   selectedTab: undefined,
+  useSplitter: "DRAGGER",
+  isResizing: false,
+  axisXStart: 0,
+  axisYStart: 0,
 };
 
 export const AppContext = createContext({
@@ -15,6 +19,9 @@ export const AppContext = createContext({
   addPaneContainer: () => {},
   removePaneContainer: () => {},
   setSelectedTab: () => {},
+  setContainerHeight: () => {},
+  setSplitter: () => {},
+  setResizing: () => {},
 });
 
 export default function AppContextProvider({ children }) {
@@ -24,16 +31,23 @@ export default function AppContextProvider({ children }) {
     paneContainers: appState.paneContainers,
     totalPaneContainers: appState.paneContainers.length,
     selectedTabGlobal: appState.selectedTab,
+    useSplitter: appState.useSplitter,
+    isResizing: appState.isResizing,
+    axisXStart: appState.axisXStart,
+    axisYStart: appState.axisYStart,
     addPaneContainer: () => {
       setAppState((prevState) => {
         const newPaneContainer = {
           id: new Date().getTime().toString(),
-          containerHeight: "100%",
+          containerHeight: 100, //in percent
         };
 
         return {
           ...prevState,
           paneContainers: [...prevState.paneContainers, newPaneContainer],
+          isResizing: false,
+          axisXStart: 0,
+          axisYStart: 0,
         };
       });
     },
@@ -47,6 +61,9 @@ export default function AppContextProvider({ children }) {
         setAppState((prevState) => ({
           ...prevState,
           paneContainers: updatePaneContainers,
+          isResizing: false,
+          axisXStart: 0,
+          axisYStart: 0,
         }));
       }
     },
@@ -62,10 +79,10 @@ export default function AppContextProvider({ children }) {
         foundContainer.containerHeight = newHeight;
         siblingContainer.containerHeight = newHeightPreviousSibling;
 
-        console.log(
-          "setContainerHeight : updatePaneContainers",
-          updatePaneContainers
-        );
+        // console.log(
+        //   "setContainerHeight : updatePaneContainers",
+        //   updatePaneContainers
+        // );
 
         setAppState((prevState) => ({
           ...prevState,
@@ -74,7 +91,30 @@ export default function AppContextProvider({ children }) {
       }
     },
     setSelectedTab: (tab) => {
-      setAppState((prevState) => ({ ...prevState, selectedTab: tab }));
+      setAppState((prevState) => ({
+        ...prevState,
+        selectedTab: tab,
+        isResizing: false,
+        axisXStart: 0,
+        axisYStart: 0,
+      }));
+    },
+    setSplitter: (value) => {
+      setAppState((prevState) => ({
+        ...prevState,
+        useSplitter: value,
+        isResizing: false,
+        axisXStart: 0,
+        axisYStart: 0,
+      }));
+    },
+    setResizing: (value, changedXAxis, changedYAxis) => {
+      setAppState((prevState) => ({
+        ...prevState,
+        isResizing: value,
+        axisXStart: changedXAxis,
+        axisYStart: changedYAxis,
+      }));
     },
   };
 

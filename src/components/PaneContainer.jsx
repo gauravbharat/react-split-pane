@@ -1,5 +1,6 @@
 import Pane from "./Pane";
 import Dragger from "../shared/components/Dragger";
+import Splitter from "../shared/components/Splitter";
 
 import { useContext, useRef, useState } from "react";
 import { AppContext } from "../store/app.context";
@@ -11,7 +12,7 @@ const firstTab = {
   content: getWords(20),
 };
 
-export default function PaneContainer({ id, showSplitter, containerHeight }) {
+export default function PaneContainer({ id, showSplitter }) {
   const ctx = useContext(AppContext);
   const divRef = useRef();
 
@@ -23,14 +24,14 @@ export default function PaneContainer({ id, showSplitter, containerHeight }) {
   const [panes, setPanes] = useState([
     {
       id: new Date().getTime().toString(),
-      paneWidth: "100%",
+      paneWidth: 100, //in percentage
     },
   ]);
 
   function handleAddPane() {
     setPanes((prevState) => [
       ...prevState,
-      { id: new Date().getTime().toString(), paneWidth: "100%" },
+      { id: new Date().getTime().toString(), paneWidth: 100 },
     ]);
   }
 
@@ -56,14 +57,26 @@ export default function PaneContainer({ id, showSplitter, containerHeight }) {
   }
 
   function handleDragComplete(changePx) {
+    const parentDiv = document.getElementById("pane-containers-div");
+
     const { percentage, siblingPercentage } = getNewHeight(
       changePx,
       divRef.current.offsetHeight,
-      divRef.current.offsetParent.offsetHeight,
+      parentDiv.offsetHeight,
       ctx.totalPaneContainers
     );
 
-    ctx.setContainerHeight(id, `${percentage}%`, `${siblingPercentage}%`);
+    // console.log("Pane Container : handleDragComplete", {
+    //   percentage,
+    //   siblingPercentage,
+    //   div_offsetParent_offsetHeight: div.offsetHeight,
+    // });
+
+    if (percentage <= 10 || siblingPercentage <= 10) {
+      return;
+    }
+
+    ctx.setContainerHeight(id, percentage, siblingPercentage);
   }
 
   function recaliberPaneWidths(paneId, newWidth, newSiblingWidth) {
@@ -92,16 +105,18 @@ export default function PaneContainer({ id, showSplitter, containerHeight }) {
       style={{
         display: "flex",
         position: "relative",
-        height: containerHeight,
+        height: "100%",
         width: "100%",
         overflowX: "scroll",
         overflowY: "hidden",
       }}
       ref={divRef}
+      id={`pane-container-${id}`}
     >
-      {showSplitter && (
+      {showSplitter && ctx.useSplitter === "DRAGGER" && (
         <Dragger horizontal={true} onDragComplete={handleDragComplete} />
       )}
+
       {panes.map((pane, index) => (
         <Pane
           key={pane.id}

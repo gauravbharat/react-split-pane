@@ -1,88 +1,52 @@
-import { useState } from "react";
+import { useContext } from "react";
+import { AppContext } from "../../store/app.context";
+import { getChangedPixels } from "../util/drag-computations";
 
-const getChangeInPx = (newPos, oldPos) => {
-  const moveDirection = newPos - oldPos;
-  const changePx =
-    moveDirection < 0 ? moveDirection - moveDirection * 2 : -moveDirection;
+export default function Splitter({ parentId, horizontal = false, onSplit }) {
+  const ctx = useContext(AppContext);
 
-  return changePx;
-};
-
-export default function Splitter({ horizontal = false, onSplit }) {
-  const [resizeState, setResizeState] = useState({
-    resizing: false,
-    posClientX: undefined,
-    posClientY: undefined,
-    moveDirection: 0,
-  });
-
-  function handleMouseDown(e) {
-    setResizeState({
-      resizing: true,
-      posClientX: e.clientX,
-      posClientY: e.clientY,
-      moveDirection: 0,
-    });
+  function handleDragStart(e) {
+    // console.log("Splitter :handleDragStart : horizontal", horizontal);
+    ctx.setResizing(true, e.clientX, e.clientY);
   }
 
-  function handleMouseUp(e) {
-    setResizeState({
-      resizing: false,
-      posClientX: undefined,
-      posClientY: undefined,
-      moveDirection: 0,
-    });
+  function handleDragEnd() {
+    // console.log("Splitter :handleDragEnd : horizontal", horizontal);
+    ctx.setResizing(false, 0, 0);
   }
 
-  function handleMouseMouve(e) {
-    // console.log("handleDrag", e);
+  function handleDrag(e) {
+    // console.log("Splitter : handleDrag : ctx.isResizing", ctx.isResizing);
 
-    if (!resizeState.resizing) {
+    if (!ctx.isResizing) {
       return;
     }
 
-    const changePixelX = getChangeInPx(e.clientX, resizeState.posClientX);
-    const changePixelY = getChangeInPx(e.clientY, resizeState.posClientY);
+    const axisXChange = e.clientX;
+    const axisYChange = e.clientY;
 
-    console.log("handleMouseMouve", {
-      clientX: e.clientX,
-      clientY: e.clientY,
-      // pageX: e.pageX,
-      // pageY: e.pageY,
-      // screenX: e.screenX,
-      // screenY: e.screenY,
-      changePixelX,
-    });
+    // console.log("Splitter : handleDrag : axisXChange", axisXChange);
+    // console.log("Splitter : handleDrag : axisYChange", axisYChange);
 
-    onSplit(horizontal ? changePixelY : changePixelX);
+    if (horizontal && axisYChange <= 0) {
+      return;
+    }
 
-    // console.log("handleDragEnd", {
-    //   clientX: e.clientX,
-    //   clientY: e.clientY,
-    //   posClientX: resizeState.posClientX,
-    //   posClientY: resizeState.posClientY,
-    // });
-    // setResizeState({
-    // const moveDirection = e.clientX - resizeState.posClientX;
-    // const changePx =
-    //   moveDirection < 0 ? moveDirection - moveDirection * 2 : -moveDirection;
+    if (!horizontal && axisXChange <= 0) {
+      return;
+    }
 
-    // console.log("handleMouseMouve", {
-    //   changePixelX,
-    //   changePixelY,
-    // });
+    const changedPixels = horizontal
+      ? getChangedPixels(axisYChange, ctx.axisYStart)
+      : getChangedPixels(axisXChange, ctx.axisXStart);
 
-    // console.log("handleDragEnd", {
-    //   moveDirection,
-    //   clientX: e.clientX,
-    //   posClientX: resizeState.posClientX,
-    //   changePx,
-    // });
+    if (changedPixels == ctx.changedPixels) {
+      return;
+    }
 
-    // console.log(
-    //   "handleDragEnd : divRef.current.offsetWidth",
-    //   divRef.current.offsetWidth
-    // );
+    const incrementCurrentPaneContainer = changedPixels > 0;
+
+    onSplit(incrementCurrentPaneContainer);
   }
 
   return (
@@ -95,12 +59,13 @@ export default function Splitter({ horizontal = false, onSplit }) {
         zIndex: 5,
         height: horizontal ? "1px" : "100%",
         width: horizontal ? "100%" : "1px",
-        backgroundColor: "blue",
+        backgroundColor: ctx.isResizing ? "transparent" : "blue",
       }}
       draggable
-      onMouseDown={handleMouseDown}
-      onMouseUp={handleMouseUp}
-      onMouseMove={handleMouseMouve}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+      onDrag={handleDrag}
+      id={`splitter-${parentId}`}
     ></div>
   );
 }
