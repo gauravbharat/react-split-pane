@@ -6,6 +6,7 @@ import { useContext, useRef, useState } from "react";
 import { AppContext } from "../store/app.context";
 import { getWords } from "../shared/util/lorem-generator";
 import { getNewHeight } from "../shared/util/drag-computations";
+import { getRandomColor } from "../shared/util/colors";
 
 const firstTab = {
   title: new Date().getTime().toString().slice(-5),
@@ -25,13 +26,18 @@ export default function PaneContainer({ id, showSplitter }) {
     {
       id: new Date().getTime().toString(),
       paneWidth: 100, //in percentage
+      bgColor: getRandomColor(),
     },
   ]);
 
   function handleAddPane() {
     setPanes((prevState) => [
       ...prevState,
-      { id: new Date().getTime().toString(), paneWidth: 100 },
+      {
+        id: new Date().getTime().toString(),
+        paneWidth: 100,
+        bgColor: getRandomColor(),
+      },
     ]);
   }
 
@@ -130,6 +136,7 @@ export default function PaneContainer({ id, showSplitter }) {
           isLastPane={lastIndex === index}
           showSplitter={index > 0}
           totalPanes={totalPanes}
+          bgColor={pane.bgColor}
         />
       ))}
     </div>

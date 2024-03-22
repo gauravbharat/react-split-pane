@@ -1,35 +1,23 @@
-import { useRef, useState } from "react";
+import { useContext, useState } from "react";
+import { AppContext } from "../store/app.context";
 import { getWords } from "../shared/util/lorem-generator";
 
-import { useContext } from "react";
-import { AppContext } from "../store/app.context";
-import Dragger from "../shared/components/Dragger";
-import { getNewWidth } from "../shared/util/drag-computations";
-import Splitter from "../shared/components/Splitter";
-
-export default function Pane({
+export default function SplitPaner({
   initTab,
   paneContainerId,
+  id,
   onAddPane,
   onRemovePane,
-  isLastPane,
-  id,
-  paneWidth,
-  showSplitter,
-  onResizePane,
-  totalPanes,
   bgColor,
+  isLastPane,
 }) {
   const ctx = useContext(AppContext);
-  const divRef = useRef();
 
   const [paneState, setPaneState] = useState({
     tabs: initTab,
     selectedTab: initTab[0],
     selectedTabIdx: 0,
   });
-
-  // console.log("Pane : RENDERED : paneState", paneState);
 
   function handleAddTab() {
     const newTab = {
@@ -83,58 +71,11 @@ export default function Pane({
     }
   }
 
-  function handleDragComplete(changePx) {
-    const paneContainer = document.getElementById(
-      `pane-container-${paneContainerId}`
-    );
-
-    const { percentage, siblingPercentage } = getNewWidth(
-      changePx,
-      divRef.current.offsetWidth,
-      paneContainer.offsetWidth,
-      totalPanes
-    );
-
-    if (percentage <= 10 || siblingPercentage <= 10) {
-      return;
-    }
-
-    onResizePane(id, percentage, siblingPercentage);
-  }
-
-  function handleSplit(increment) {
-    let currentSiblingWidthPercent = 0;
-
-    if (paneWidth > 100) {
-      currentSiblingWidthPercent = 100 - (paneWidth - 100);
-    } else {
-      currentSiblingWidthPercent = 100 + (100 - paneWidth);
-    }
-
-    let percentage = paneWidth;
-    let siblingPercentage = currentSiblingWidthPercent;
-
-    if (increment) {
-      percentage++;
-      siblingPercentage--;
-    } else {
-      percentage--;
-      siblingPercentage++;
-    }
-
-    if (percentage <= 10 || siblingPercentage <= 10) {
-      return;
-    }
-
-    onResizePane(id, percentage, siblingPercentage);
-  }
-
   return (
     <div
       style={{
         display: "block",
         overflowX: "scroll",
-        width: `${paneWidth}%`,
         height: "100%",
         border: "1px solid blue",
         minWidth: "81px",
@@ -142,15 +83,7 @@ export default function Pane({
         position: "relative",
         background: bgColor,
       }}
-      ref={divRef}
     >
-      {showSplitter && ctx.useSplitter === "DRAGGER" && (
-        <Dragger onDragComplete={handleDragComplete} />
-      )}
-      {showSplitter > 0 && ctx.useSplitter === "MOUSEMOVE" && (
-        <Splitter key={`splitter-${id}`} parentId={id} onSplit={handleSplit} />
-      )}
-
       <ul
         style={{
           display: "flex",

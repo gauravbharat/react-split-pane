@@ -3,7 +3,9 @@ import { createContext, useState } from "react";
 const initialState = {
   paneContainers: [
     {
-      id: new Date().getTime().toString(),
+      id: `pc_${(
+        new Date().getTime() + Math.round(Math.random() * 1000)
+      ).toString()}`,
       containerHeight: 100, //in percent
     },
   ],
@@ -38,7 +40,9 @@ export default function AppContextProvider({ children }) {
     addPaneContainer: () => {
       setAppState((prevState) => {
         const newPaneContainer = {
-          id: new Date().getTime().toString(),
+          id: `pc_${(
+            new Date().getTime() + Math.round(Math.random() * 1000)
+          ).toString()}`,
           containerHeight: 100, //in percent
         };
 
@@ -52,6 +56,8 @@ export default function AppContextProvider({ children }) {
       });
     },
     removePaneContainer: (id) => {
+      // console.log("removePaneContainer", id);
+
       const foundIdx = appState.paneContainers.findIndex((v) => v.id === id);
 
       if (foundIdx > -1) {
@@ -100,6 +106,27 @@ export default function AppContextProvider({ children }) {
       }));
     },
     setSplitter: (value) => {
+      if (
+        value === "split-react-pane" ||
+        appState.useSplitter === "split-react-pane"
+      ) {
+        setAppState({
+          paneContainers: Array.apply(null, Array(4)).map((_, idx) => ({
+            id: `pc_${(
+              new Date().getTime() + Math.round(Math.random() * 1000)
+            ).toString()}${idx}`,
+            containerHeight: 100, //in percent
+          })),
+          selectedTab: undefined,
+          useSplitter: "split-react-pane",
+          isResizing: false,
+          axisXStart: 0,
+          axisYStart: 0,
+        });
+
+        return;
+      }
+
       setAppState((prevState) => ({
         ...prevState,
         useSplitter: value,
